@@ -14,7 +14,7 @@ type CognitoAuthConfig = {
   region: string;
 };
 
-export type OfficeQuota = { name: string; quota: number };
+export type OfficeQuota = { name: string; quota: number; parkingQuota: number};
 
 const isOfficeQuotas = (input: any): input is OfficeQuota[] =>
   Array.isArray(input) &&
@@ -23,7 +23,8 @@ const isOfficeQuotas = (input: any): input is OfficeQuota[] =>
       typeof o === 'object' &&
       o !== null &&
       typeof o.name === 'string' &&
-      typeof o.quota === 'number'
+      typeof o.quota === 'number' &&
+      typeof o.parkingQuota === 'number'
   );
 
 export type AppAuthConfig = CognitoAuthConfig | TestAuthConfig;

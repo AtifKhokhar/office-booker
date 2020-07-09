@@ -27,6 +27,8 @@ export class OfficeBookingModel {
   date!: string;
   @attribute()
   bookingCount!: number;
+  @attribute()
+  parkingBookingCount!: number;
   @attribute({
     defaultProvider: () => addDays(new Date(), 365).getTime(),
   })
@@ -52,6 +54,7 @@ export const incrementOfficeBookingCount = async (
         name: office.name,
         date,
         bookingCount: 0,
+        parkingBookingCount: 0,
       }),
       {
         condition: {
@@ -75,8 +78,13 @@ export const incrementOfficeBookingCount = async (
     'bookingCount',
     new MathematicalExpression(new AttributePath('bookingCount'), '+', 1)
   );
+  updateExpression.set(
+    'parkingBookingCount',
+    new MathematicalExpression(new AttributePath('parkingBookingCount'), '+', 1)
+  );
 
   const quotaValue = attributes.addValue(office.quota);
+  const parkingQuotaValue = attributes.addValue(office.parkingQuota);
   const client = new DynamoDB(config.dynamoDB);
   try {
     await client
@@ -86,7 +94,7 @@ export const incrementOfficeBookingCount = async (
         UpdateExpression: updateExpression.serialize(attributes),
         ExpressionAttributeNames: attributes.names,
         ExpressionAttributeValues: attributes.values,
-        ConditionExpression: `bookingCount < ${quotaValue}`,
+        ConditionExpression: `bookingCount < ${quotaValue} AND parkingBookingCount < ${parkingQuotaValue}`,
       })
       .promise();
   } catch (err) {
@@ -110,6 +118,10 @@ export const decrementOfficeBookingCount = async (
   updateExpression.set(
     'bookingCount',
     new MathematicalExpression(new AttributePath('bookingCount'), '-', 1)
+  );
+  updateExpression.set(
+    'parkingBookingCount',
+    new MathematicalExpression(new AttributePath('parkingBookingCount'), '-', 1)
   );
 
   const client = new DynamoDB(config.dynamoDB);
